@@ -1,5 +1,6 @@
 *.pyc
 errors
+cache
 private
 sessions
 databases
