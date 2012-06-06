@@ -20,4 +20,4 @@ From the command line:
     pip install rdflib
     pip install mercurial
     pip install nose
-
+    pip install requests
