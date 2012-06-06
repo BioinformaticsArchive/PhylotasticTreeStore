@@ -1,9 +1,8 @@
 #!/usr/bin/env python
-import sys
-from rdflib.graph import Graph
-from dendropy import Node, Tree, Edge
 
 def rdf2dendropyTree(filepath):
+    from rdflib.graph import Graph
+    from dendropy import Node, Tree, Edge
     graph = Graph()
     graph.parse(filepath)
     tree = Tree()
@@ -43,6 +42,7 @@ def rdf2dendropyTree(filepath):
 
 
 if __name__ == '__main__':
+    import sys
     t = rdf2dendropyTree(sys.argv[1])
     print t.write_to_stream(sys.stdout, schema="nexml")
             
