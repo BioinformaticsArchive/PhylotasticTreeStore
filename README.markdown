@@ -12,13 +12,12 @@ Installation
 
 From the command line:
 
-<pre>
-virtualenv vdev
-source vdev/bin/activate
-pip install pyodbc
-pip install virtuoso
-pip install rdflib
-pip install mercurial
-pip install nose
-</pre>
+
+    virtualenv vdev
+    source vdev/bin/activate
+    pip install pyodbc
+    pip install virtuoso
+    pip install rdflib
+    pip install mercurial
+    pip install nose
 
