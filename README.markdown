@@ -11,7 +11,8 @@ Installation
  3. Install the python virtuoso bindings:
 
 From the command line:
-<code>
+
+<pre>
 virtualenv vdev
 source vdev/bin/activate
 pip install pyodbc
@@ -19,5 +20,5 @@ pip install virtuoso
 pip install rdflib
 pip install mercurial
 pip install nose
-</code>
+</pre>
 
