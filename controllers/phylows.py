@@ -211,7 +211,6 @@ def tree():
         tree_id = 'cdao:' + request.args[0]
     try:
         tree_rdf = _get_tree_rdf(tree_id)
-        return T(tree_rdf)
         tree_obj = rdf2dendropyTree(data=tree_rdf)
     except:
         raise
