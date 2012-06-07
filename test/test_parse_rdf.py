@@ -26,14 +26,13 @@ def rdf2dendropyTree(filepath):
     
     
     OBO = Namespace(u"http://purl.obolibrary.org/obo/")
-    mrdf = Namespace(u'http://www.w3.org/1999/02/22-rdf-syntax-ns#')
+    
     parentless = set()
-    dendro_nd_to_rdf = {}
     for s, p, o in graph.triples((None, OBO[HAS_PARENT_PREDICATE], None)):
         print type(s), type(p), type(o)
         print s, p, o
 #        o_res = rdflib.Resource(graph, o)
-        parent = nd_dict.get(o)
+        parent = nd_dict.get(id(o))
         
         if parent is None:
             #print 'Parent o.value = ', o.value(rdflib.RDF.nodeID)
@@ -42,21 +41,22 @@ def rdf2dendropyTree(filepath):
             o = rdflib.resource.Resource(graph, o)
             print 'Parent nodeID = ', graph.value(raw_o, rdflib.RDF.nodeID)
             o_tu = o.value(OBO[REPRESENTS_TU_PREDICATE])
+            print 'o_tu =', str(o_tu), type(o_tu)
             if o_tu:
                 o_label = o_tu.value(rdflib.RDFS.label)
+                print 'o_label =', str(o_tu), type(o_label)
                 parent = Node(label=o_label)
             else:
                 parent = Node()
             print 'adding parent', id(parent), 'from', raw_o
             
-            nd_dict[raw_o] = parent
-            dendro_nd_to_rdf[parent] = raw_o
+            nd_dict[id(raw_o)] = parent
             parentless.add(parent)
-        child = nd_dict.get(s)
+        child = nd_dict.get(id(s))
         if child is None:
             raw_s = s
             s = rdflib.resource.Resource(graph, s)
-            print 'Parent nodeID = ', s.value(rdflib.RDF.nodeID)
+            print 'child nodeID = ', s.value(rdflib.RDF.nodeID)
             s_tu = s.value(OBO[REPRESENTS_TU_PREDICATE])
             if s_tu:
                 print s_tu
@@ -66,12 +66,10 @@ def rdf2dendropyTree(filepath):
             else:
                 child = Node()
             print 'adding child', id(child), ' from', raw_s
-            nd_dict[raw_s] = child
-            dendro_nd_to_rdf[child] = raw_s
-        else:
-            if parent in parentless:
-                print 'Removing', id(parent)
-                parentless.remove(parent)
+            nd_dict[id(raw_s)] = child
+        if parent in parentless:
+            print 'Removing', id(parent)
+            parentless.remove(parent)
         parent.add_child(child)
             
         print 'len(parentless) =', len(parentless)
