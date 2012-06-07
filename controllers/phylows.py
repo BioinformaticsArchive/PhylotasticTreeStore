@@ -2,6 +2,16 @@
 ### required - do no delete
 
 def rdf2dendropyTree(file_obj=None, data=None):
+    '''
+    Parses the content (a `file_obj` file object or `data` as a) into a dendropyTree.
+    
+    Uses the 'has_Parent' term in http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#
+    to construct and return a rooted dendropy.Tree object
+    
+    Relies on rdflib and dendropy.
+    Raises ValueError if the graph does not imply exactly 1 root node
+    '''
+    
     from rdflib.graph import Graph
     from dendropy import Node, Tree, Edge
     graph = Graph()
@@ -9,14 +19,12 @@ def rdf2dendropyTree(file_obj=None, data=None):
         graph.parse(file=file_obj)
     else:
         graph.parse(data=data)
-    tree = Tree()
     nd_dict = {}
     has_parent_predicate = u'http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#has_Parent'
     identifier_prefix = u'http://www.evolutionaryontology.org/cdao/1.0/&localspace;'
     suff_ind = len(identifier_prefix)
     parentless = set()
     for subject_o, predicate, obj_o in graph:
-        
         if unicode(predicate) == has_parent_predicate:
             subject = unicode(subject_o)
             obj_ = unicode(obj_o)
@@ -36,12 +44,19 @@ def rdf2dendropyTree(file_obj=None, data=None):
             else:
                 parentless.remove(child)
             parent.add_child(child)
-            print str(parent)
+
+    if len(parentless) != 1:
+        message = "Expecting to find exactly Node (an object of a has_Parent triple) in the graph without a parent. Found %d" % len(parentless)
+        CUTOFF_FOR_LISTING_PARENTLESS_NODES = len(parentless) # we might want to put in a magic number here to suppress really long output
+        if len(parentless) > 0 and len(parentless) < CUTOFF_FOR_LISTING_PARENTLESS_NODES:
+            message += ":\n  "
+            message += "\n  ".join([i.label for i in parentless])
         else:
-            print '?', str(predicate)
-    print parentless
-    assert len(parentless) == 1
+            message += "."
+        raise ValueError(message)
+    tree = Tree()
     tree.seed_node = list(parentless)[0]
+    tree.is_rooted = True
     return tree
 
 
@@ -101,3 +116,7 @@ def find():
     else:
         raise HTTP(400, 'query not yet implemented')
 
+def index():
+    if request.vars.tree_id:
+        redirect(URL(c='phylows', f='tree', args=[request.vars.tree_id]))
+    return dict()
