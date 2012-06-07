@@ -11,8 +11,6 @@ REPRESENTS_TU_PREDICATE = u'CDAO_0000187'
 SPARQL_SERVER_GET_URL = 'http://phylotastic.nescent.org/sparql'
 import os
 _DEBUGGING = os.environ.get('PHYLOTASTIC_TREE_STORE_DEBUGGING') == '1'
-from rdflib import Literal, BNode, Namespace, Graph
-from rdflib import RDF
 import rdflib
 
 
@@ -28,7 +26,7 @@ def rdf2dendropyTree(file_obj=None, data=None):
     '''
     
     from dendropy import Node, Tree, Edge, TaxonSet, Taxon
-    graph = Graph()
+    graph = rdflib.Graph()
     if file_obj:
         graph.parse(file=file_obj)
     else:
@@ -38,7 +36,7 @@ def rdf2dendropyTree(file_obj=None, data=None):
     if _DEBUGGING:
         out = open('parse_rdf.txt', 'w')
     taxon_set = TaxonSet()
-    OBO = Namespace(u"http://purl.obolibrary.org/obo/")
+    OBO = rdflib.Namespace(u"http://purl.obolibrary.org/obo/")
     parentless = set()
     for s, p, o in graph.triples((None, OBO[HAS_PARENT_PREDICATE], None)):
         parent = nd_dict.get(id(o))
