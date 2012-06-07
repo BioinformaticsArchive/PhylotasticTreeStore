@@ -66,6 +66,7 @@ def rdf2dendropyTree(filepath):
         else:
             print 'Removing', id(child)
             parentless.remove(child)
+        print 'len(parentless) =', len(parentless)
         if _DEBUGGING:
             out.write('%s %s %s\n' % ( str(s), p, o))
             out.write('%s\n' % ( str(parentless)))
@@ -73,10 +74,14 @@ def rdf2dendropyTree(filepath):
         out.close()
     if len(parentless) != 1:
         message = "Expecting to find exactly Node (an object of a has_Parent triple) in the graph without a parent. Found %d" % len(parentless)
-        CUTOFF_FOR_LISTING_PARENTLESS_NODES = len(parentless) # we might want to put in a magic number here to suppress really long output
+        CUTOFF_FOR_LISTING_PARENTLESS_NODES = 1 + len(parentless) # we might want to put in a magic number here to suppress really long output
         if len(parentless) > 0 and len(parentless) < CUTOFF_FOR_LISTING_PARENTLESS_NODES:
             message += ":\n  "
-            message += "\n  ".join([i.label for i in parentless])
+            for i in parentless:
+                if i.label:
+                    message += "\n  " + i.label
+                else:
+                    message += "\n  <unlabeled>"
             raise ValueError(message)
         else:
             sys.exit('no parentless')
