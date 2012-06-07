@@ -67,9 +67,10 @@ def rdf2dendropyTree(filepath):
                 child = Node()
             print 'adding child', id(child), ' from', raw_s
             nd_dict[id(raw_s)] = child
-        if parent in parentless:
-            print 'Removing', id(parent)
-            parentless.remove(parent)
+        else:
+            if child in parentless:
+                print 'Removing', id(parent)
+                parentless.remove(child)
         parent.add_child(child)
             
         print 'len(parentless) =', len(parentless)
