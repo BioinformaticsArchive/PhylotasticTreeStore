@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 ### required - do no delete
 
-CDAO_PREFIX = u'http://purl.obolibrary.org/obo/'
+OBO_PREFIX = u'http://purl.obolibrary.org/obo/'
+CDAO_PREFIX = u'http://purl.obolibrary.org/obo/cdao.owl#'
 TNRS_PREFIX = u'http://tnrs.evoio.org/terms/'
 HAS_PARENT_PREDICATE = u'CDAO_0000179'
 HAS_ROOT_PREDICATE = u'CDAO_0000148'
@@ -26,7 +27,7 @@ def rdf2dendropyTree(file_obj=None, data=None):
     else:
         graph.parse(data=data)
     nd_dict = {}
-    has_parent_predicate = CDAO_PREFIX + HAS_PARENT_PREDICATE
+    has_parent_predicate = OBO_PREFIX + HAS_PARENT_PREDICATE
     parentless = set()
     for subject_o, predicate, obj_o in graph:
         if unicode(predicate) == has_parent_predicate:
@@ -88,8 +89,8 @@ def _get_tree_rdf(tree_id):
     SPARQL_SERVER_GET_URL = 'http://phylotastic.nescent.org/sparql'
 
     cleaned_id = tree_id # TEMP we need to protect against SPARQL injection attact?
-    query = '''
-    prefix obo: <http://purl.obolibrary.org/obo/>
+    query = u'prefix obo: <' + OBO_PREFIX + u'''>
+prefix cdao: <''' + CDAO_PREFIX + u'''>
 construct 
 {
 ?node obo:CDAO_0000179 ?parent_node . 
@@ -152,7 +153,7 @@ def tree():
             raise HTTP(400, 'Tree ID required')
     else:
         # If we we get an id through phyloWS, we make the uri by adding the obo: prefix
-        tree_id = 'obo:' + request.args[0]
+        tree_id = 'cdao:' + request.args[0]
     try:
         tree_rdf = _get_tree_rdf(tree_id)
         
@@ -178,6 +179,7 @@ def find():
             raise HTTP(400, 'no URI specified')
         # magic involving sparql
         # takes list of URIs and queries treestore for trees that contain those URIs
+        tree_id_list = _get_tree_list(taxa_uris)
         treedict = {"http://example.com/tree10" : { "label" : "something", "author": ""}, 
   "http://example.com/tree34": { "label" : "something", "author": ""} }
         return response.json(treedict)
