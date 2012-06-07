@@ -53,9 +53,9 @@ def rdf2dendropyTree(file_obj=None, data=None):
         if len(parentless) > 0 and len(parentless) < CUTOFF_FOR_LISTING_PARENTLESS_NODES:
             message += ":\n  "
             message += "\n  ".join([i.label for i in parentless])
+            raise ValueError(message)
         else:
-            message += "."
-        raise ValueError(message)
+            return None
     tree = Tree()
     tree.seed_node = list(parentless)[0]
     tree.is_rooted = True
@@ -96,7 +96,7 @@ construct
 }
  where 
 {
-obo:''' + cleaned_id + ''' obo:CDAO_0000148 ?root .
+''' + cleaned_id + ''' obo:CDAO_0000148 ?root .
 ?node obo:CDAO_0000179 ?parent_node . 
 ?node obo:CDAO_0000179 ?root option(transitive) . 
 }'''
@@ -107,7 +107,7 @@ obo:''' + cleaned_id + ''' obo:CDAO_0000148 ?root .
                'format' : 'application/sparql-results+xml',
     }
     o = open('req', 'w')
-    o.write(str(payload))
+    o.write('\n'.join([(k + ' : ' + v) for k, v in payload.iteritems()]))
     o.close()
     resp = requests.get(SPARQL_SERVER_GET_URL, params=payload)
     resp.raise_for_status()
@@ -151,7 +151,8 @@ def tree():
         if not tree_id:
             raise HTTP(400, 'Tree ID required')
     else:
-        tree_id = request.args[0]
+        # If we we get an id through phyloWS, we make the uri by adding the obo: prefix
+        tree_id = 'obo:' + request.args[0]
     try:
         tree_rdf = _get_tree_rdf(tree_id)
         
