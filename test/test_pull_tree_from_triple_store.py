@@ -8,8 +8,8 @@ construct
 }
  where 
 {
-<http://www.evolutionaryontology.org/cdao/1.0/&localspace;mytree> cdao:has_Root ?root .
- ?node cdao:has_Parent ?parent_node . 
+cdao:mytree cdao:has_Root ?root .
+?node cdao:has_Parent ?parent_node . 
 ?node cdao:has_Parent ?root option(transitive) . 
 }''',
     'default-graph-uri' : '',
