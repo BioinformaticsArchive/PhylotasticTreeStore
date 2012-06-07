@@ -29,9 +29,6 @@ def rdf2dendropyTree(filepath):
     
     parentless = set()
     for s, p, o in graph.triples((None, OBO[HAS_PARENT_PREDICATE], None)):
-        print type(s), type(p), type(o)
-        print s, p, o
-#        o_res = rdflib.Resource(graph, o)
         parent = nd_dict.get(id(o))
         
         if parent is None:
@@ -39,16 +36,12 @@ def rdf2dendropyTree(filepath):
             
             raw_o = o
             o = rdflib.resource.Resource(graph, o)
-            print 'Parent nodeID = ', graph.value(raw_o, rdflib.RDF.nodeID)
             o_tu = o.value(OBO[REPRESENTS_TU_PREDICATE])
-            print 'o_tu =', str(o_tu), type(o_tu)
             if o_tu:
                 o_label = o_tu.value(rdflib.RDFS.label)
-                print 'o_label =', str(o_tu), type(o_label)
                 parent = Node(label=o_label)
             else:
                 parent = Node()
-            print 'adding parent', id(parent), 'from', raw_o
             
             nd_dict[id(raw_o)] = parent
             parentless.add(parent)
@@ -56,24 +49,18 @@ def rdf2dendropyTree(filepath):
         if child is None:
             raw_s = s
             s = rdflib.resource.Resource(graph, s)
-            print 'child nodeID = ', s.value(rdflib.RDF.nodeID)
             s_tu = s.value(OBO[REPRESENTS_TU_PREDICATE])
             if s_tu:
-                print s_tu
                 s_label = s_tu.value(rdflib.RDFS.label)
-                print s_label
                 child = Node(label=s_label)
             else:
                 child = Node()
-            print 'adding child', id(child), ' from', raw_s
             nd_dict[id(raw_s)] = child
         else:
             if child in parentless:
-                print 'Removing', id(parent)
                 parentless.remove(child)
         parent.add_child(child)
             
-        print 'len(parentless) =', len(parentless)
         if _DEBUGGING:
             out.write('%s %s %s\n' % ( str(s), p, o))
             out.write('%s\n' % ( str(parentless)))
