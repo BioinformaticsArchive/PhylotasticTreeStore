@@ -1,6 +1,12 @@
 # -*- coding: utf-8 -*-
 ### required - do no delete
 
+CDAO_PREFIX = u'http://purl.obolibrary.org/obo/'
+TNRS_PREFIX = u'http://tnrs.evoio.org/terms/'
+HAS_PARENT_PREDICATE = u'CDAO_0000179'
+HAS_ROOT_PREDICATE = u'CDAO_0000148'
+REPRESENTS_TU_PREDICATE = u'CDAO_0000187'
+
 def rdf2dendropyTree(file_obj=None, data=None):
     '''
     Parses the content (a `file_obj` file object or `data` as a) into a dendropyTree.
@@ -20,18 +26,14 @@ def rdf2dendropyTree(file_obj=None, data=None):
     else:
         graph.parse(data=data)
     nd_dict = {}
-    has_parent_predicate = u'http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#has_Parent'
-    identifier_prefix =    u'http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#'
-    suff_ind = len(identifier_prefix)
+    has_parent_predicate = CDAO_PREFIX + HAS_PARENT_PREDICATE
     parentless = set()
     for subject_o, predicate, obj_o in graph:
         if unicode(predicate) == has_parent_predicate:
             subject = unicode(subject_o)
             obj_ = unicode(obj_o)
-            assert subject.startswith(identifier_prefix)
-            assert obj_.startswith(identifier_prefix)
-            s_suffix = subject[suff_ind:]
-            o_suffix = obj_[suff_ind:]
+            s_suffix = subject
+            o_suffix = obj_
             parent = nd_dict.get(o_suffix)
             if parent is None:
                 parent = Node(label=o_suffix)
@@ -86,16 +88,17 @@ def _get_tree_rdf(tree_id):
     SPARQL_SERVER_GET_URL = 'http://phylotastic.nescent.org/sparql'
 
     cleaned_id = tree_id # TEMP we need to protect against SPARQL injection attact?
-    query = '''prefix cdao: <http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#>
+    query = '''
+    prefix obo: <http://purl.obolibrary.org/obo/>
 construct 
 {
-?node cdao:has_Parent ?parent_node . 
+?node obo:CDAO_0000179 ?parent_node . 
 }
  where 
 {
-cdao:''' + cleaned_id + ''' cdao:has_Root ?root .
-?node cdao:has_Parent ?parent_node . 
-?node cdao:has_Parent ?root option(transitive) . 
+obo:''' + cleaned_id + ''' obo:CDAO_0000148 ?root .
+?node obo:CDAO_0000179 ?parent_node . 
+?node obo:CDAO_0000179 ?root option(transitive) . 
 }'''
 
     payload = {'query' : query,
@@ -103,24 +106,55 @@ cdao:''' + cleaned_id + ''' cdao:has_Root ?root .
                'named-graph-uri' : '',
                'format' : 'application/sparql-results+xml',
     }
-    
+    o = open('req', 'w')
+    o.write(str(payload))
+    o.close()
     resp = requests.get(SPARQL_SERVER_GET_URL, params=payload)
     resp.raise_for_status()
     return resp.content
 
+
+def _get_tree_list(taxa_uri_list):
+    query = '''prefix obo: <http://purl.obolibrary.org/obo/>
+prefix tnrs: <http://tnrs.evoio.org/terms/>
+
+select distinct ?tree 
+ where 
+{
+?tree obo:CDAO_0000148 ?root .
+?node obo:CDAO_0000179 ?root option(transitive) . 
+{ ?node obo:CDAO_0000187 ?otu . } UNION { ?root obo:CDAO_0000187 ?otu .}
+?otu tnrs:match ?match .
+%s
+}''' % '\n UNION '.join(['{?match tnrs:reference <' + i + '> . }' for i in taxa_uri_list])
+    payload = {'query' : query,
+               'default-graph-uri' : '',
+               'named-graph-uri' : '',
+               'format' : 'application/sparql-results+xml',
+    }
+    o = open('req2', 'w')
+    o.write(str(payload))
+    o.close()
+    resp = requests.get(SPARQL_SERVER_GET_URL, params=payload)
+    resp.raise_for_status()
+    return resp.content
 
 
 # query URIs of the form phylows/tree/<identifier>
 def tree():
     ''' routed to here: <hostname>/PhylotasticTreeStore/phylows/tree/tree_id
     '''
-    if len(request.args) < 1:
-        raise HTTP(400, 'Tree ID required')
     if len(request.args) > 1:
         raise HTTP(400, 'Only one tree ID can be supplied')
-    tree_id = request.args[0]
+    if len(request.args) < 1:
+        tree_id = request.vars.get('uri')
+        if not tree_id:
+            raise HTTP(400, 'Tree ID required')
+    else:
+        tree_id = request.args[0]
     try:
         tree_rdf = _get_tree_rdf(tree_id)
+        
         tree_obj = rdf2dendropyTree(data=tree_rdf)
     except:
         raise
@@ -135,10 +169,10 @@ def tree():
 
 # query URIs of the form phylows/find/<query>
 def find():
-    # form phylows/find/tree/
+    # post to  phylows/find/tree/
     # returns list of URIs
     if "tree" in request.args:
-        x = request.vars.get('uri')
+        x = request.vars.get('taxa_uris')
         if x is None:
             raise HTTP(400, 'no URI specified')
         # magic involving sparql
