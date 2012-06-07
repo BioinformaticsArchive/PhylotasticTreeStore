@@ -6,18 +6,20 @@ Phylotastic TreeStore
 
 Installation
 ------------
- 1. Download web2py from http://www.web2py.com/examples/default/download
- 2. Download and build virtuoso from http://sourceforge.net/projects/virtuoso/files/virtuoso/
- 3. Install the python virtuoso bindings:
+From the bash:
 
-From the command line:
-
-
+    wget http://www.web2py.com/examples/static/web2py_src.zip
+    unzip web2py_src.zip
     virtualenv vdev
     source vdev/bin/activate
-    pip install pyodbc
-    pip install virtuoso
     pip install rdflib
-    pip install mercurial
-    pip install nose
     pip install requests
+    pip install dendropy
+    git clone git://github.com/phylotastic/PhylotasticTreeStore.git
+    ln -s "$PWD/PhylotasticTreeStore" web2py/applications/PhylotasticTreeStore
+    python web2py/web2py.py --nogui
+
+Enter an admin's password for web2py and then visit:
+    http://127.0.0.1:8000/PhylotasticTreeStore/phylows
+your browser.
+    
