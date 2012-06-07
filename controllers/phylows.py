@@ -11,7 +11,7 @@ REPRESENTS_TU_PREDICATE = u'CDAO_0000187'
 SPARQL_SERVER_GET_URL = 'http://phylotastic.nescent.org/sparql'
 import os
 _DEBUGGING = os.environ.get('PHYLOTASTIC_TREE_STORE_DEBUGGING') == '1'
-from rdflib import Literal, BNode, Namespace
+from rdflib import Literal, BNode, Namespace, Graph
 from rdflib import RDF
 import rdflib
 
