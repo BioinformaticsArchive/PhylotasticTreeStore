@@ -16,14 +16,14 @@ import rdflib
 
 def rdf2dendropyTree(filepath):
     from rdflib.graph import Graph
-    from dendropy import Node, Tree, Edge
+    from dendropy import Node, Tree, Edge, TaxonSet, Taxon
     graph = Graph()
     graph.parse(filepath)
     nd_dict = {}
     has_parent_predicate = OBO_PREFIX + HAS_PARENT_PREDICATE
     if _DEBUGGING:
         out = open('parse_rdf.txt', 'w')
-    
+    taxon_set = TaxonSet()
     
     OBO = Namespace(u"http://purl.obolibrary.org/obo/")
     
@@ -39,7 +39,9 @@ def rdf2dendropyTree(filepath):
             o_tu = o.value(OBO[REPRESENTS_TU_PREDICATE])
             if o_tu:
                 o_label = o_tu.value(rdflib.RDFS.label)
-                parent = Node(label=o_label)
+                t = Taxon(label=o_label)
+                taxon_set.append(t)
+                parent = Node(taxon=t)
             else:
                 parent = Node()
             
@@ -52,7 +54,9 @@ def rdf2dendropyTree(filepath):
             s_tu = s.value(OBO[REPRESENTS_TU_PREDICATE])
             if s_tu:
                 s_label = s_tu.value(rdflib.RDFS.label)
-                child = Node(label=s_label)
+                t = Taxon(label=s_label)
+                taxon_set.append(t)
+                child = Node(taxon=t)
             else:
                 child = Node()
             nd_dict[id(raw_s)] = child
@@ -80,7 +84,7 @@ def rdf2dendropyTree(filepath):
         else:
             sys.exit('no parentless')
             return None
-    tree = Tree()
+    tree = Tree(taxon_set=taxon_set)
     tree.seed_node = list(parentless)[0]
     tree.is_rooted = True
     return tree
