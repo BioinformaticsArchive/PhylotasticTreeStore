@@ -11,6 +11,11 @@ REPRESENTS_TU_PREDICATE = u'CDAO_0000187'
 SPARQL_SERVER_GET_URL = 'http://phylotastic.nescent.org/sparql'
 import os
 _DEBUGGING = os.environ.get('PHYLOTASTIC_TREE_STORE_DEBUGGING') == '1'
+from rdflib import Literal, BNode, Namespace
+from rdflib import RDF
+import rdflib
+
+
 def rdf2dendropyTree(file_obj=None, data=None):
     '''
     Parses the content (a `file_obj` file object or `data` as a) into a dendropyTree.
@@ -22,8 +27,7 @@ def rdf2dendropyTree(file_obj=None, data=None):
     Raises ValueError if the graph does not imply exactly 1 root node
     '''
     
-    from rdflib.graph import Graph
-    from dendropy import Node, Tree
+    from dendropy import Node, Tree, Edge, TaxonSet, Taxon
     graph = Graph()
     if file_obj:
         graph.parse(file=file_obj)
@@ -32,41 +36,66 @@ def rdf2dendropyTree(file_obj=None, data=None):
     nd_dict = {}
     has_parent_predicate = OBO_PREFIX + HAS_PARENT_PREDICATE
     if _DEBUGGING:
-        o = open('parse_rdf.txt', 'w')
+        out = open('parse_rdf.txt', 'w')
+    taxon_set = TaxonSet()
+    OBO = Namespace(u"http://purl.obolibrary.org/obo/")
     parentless = set()
-    for subject_o, predicate, obj_o in graph:
-        if unicode(predicate) == has_parent_predicate:
-            subject = unicode(subject_o)
-            obj_ = unicode(obj_o)
-            s_suffix = subject
-            o_suffix = obj_
-            parent = nd_dict.get(o_suffix)
-            if parent is None:
-                parent = Node(label=o_suffix)
-                nd_dict[o_suffix] = parent
-                parentless.add(parent)
-            child = nd_dict.get(s_suffix)
-            if child is None:
-                child = Node(label=s_suffix)
-                nd_dict[s_suffix] = child
+    for s, p, o in graph.triples((None, OBO[HAS_PARENT_PREDICATE], None)):
+        parent = nd_dict.get(id(o))
+        
+        if parent is None:
+            #print 'Parent o.value = ', o.value(rdflib.RDF.nodeID)
+            
+            raw_o = o
+            o = rdflib.resource.Resource(graph, o)
+            o_tu = o.value(OBO[REPRESENTS_TU_PREDICATE])
+            if o_tu:
+                o_label = o_tu.value(rdflib.RDFS.label)
+                t = Taxon(label=o_label)
+                taxon_set.append(t)
+                parent = Node(taxon=t)
             else:
+                parent = Node()
+            
+            nd_dict[id(raw_o)] = parent
+            parentless.add(parent)
+        child = nd_dict.get(id(s))
+        if child is None:
+            raw_s = s
+            s = rdflib.resource.Resource(graph, s)
+            s_tu = s.value(OBO[REPRESENTS_TU_PREDICATE])
+            if s_tu:
+                s_label = s_tu.value(rdflib.RDFS.label)
+                t = Taxon(label=s_label)
+                taxon_set.append(t)
+                child = Node(taxon=t)
+            else:
+                child = Node()
+            nd_dict[id(raw_s)] = child
+        else:
+            if child in parentless:
                 parentless.remove(child)
-            parent.add_child(child)
+        parent.add_child(child)
             
         if _DEBUGGING:
-            o.write('%s %s %s\n' % ( str(subject_o), predicate, obj_o))
+            out.write('%s %s %s\n' % ( str(s), p, o))
+            out.write('%s\n' % ( str(parentless)))
     if _DEBUGGING:
-        o.close()
+        out.close()
     if len(parentless) != 1:
         message = "Expecting to find exactly Node (an object of a has_Parent triple) in the graph without a parent. Found %d" % len(parentless)
-        CUTOFF_FOR_LISTING_PARENTLESS_NODES = len(parentless) # we might want to put in a magic number here to suppress really long output
+        CUTOFF_FOR_LISTING_PARENTLESS_NODES = 1 + len(parentless) # we might want to put in a magic number here to suppress really long output
         if len(parentless) > 0 and len(parentless) < CUTOFF_FOR_LISTING_PARENTLESS_NODES:
             message += ":\n  "
-            message += "\n  ".join([i.label for i in parentless])
+            for i in parentless:
+                if i.label:
+                    message += "\n  " + i.label
+                else:
+                    message += "\n  <unlabeled>" + str(id(i))
             raise ValueError(message)
         else:
             return None
-    tree = Tree()
+    tree = Tree(taxon_set=taxon_set)
     tree.seed_node = list(parentless)[0]
     tree.is_rooted = True
     return tree

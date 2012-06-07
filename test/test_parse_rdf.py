@@ -24,9 +24,7 @@ def rdf2dendropyTree(filepath):
     if _DEBUGGING:
         out = open('parse_rdf.txt', 'w')
     taxon_set = TaxonSet()
-    
     OBO = Namespace(u"http://purl.obolibrary.org/obo/")
-    
     parentless = set()
     for s, p, o in graph.triples((None, OBO[HAS_PARENT_PREDICATE], None)):
         parent = nd_dict.get(id(o))
