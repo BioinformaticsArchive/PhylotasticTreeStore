@@ -32,7 +32,7 @@ def rdf2dendropyTree(file_obj=None, data=None):
     if file_obj:
         graph.parse(file=file_obj)
     else:
-        graph.parse(data=data)
+        graph.parse(data=data, format='xml')
     nd_dict = {}
     has_parent_predicate = OBO_PREFIX + HAS_PARENT_PREDICATE
     if _DEBUGGING:
