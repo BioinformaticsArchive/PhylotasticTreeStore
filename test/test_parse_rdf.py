@@ -28,12 +28,16 @@ def rdf2dendropyTree(filepath):
     OBO = Namespace(u"http://purl.obolibrary.org/obo/")
     mrdf = Namespace(u'http://www.w3.org/1999/02/22-rdf-syntax-ns#')
     parentless = set()
+    dendro_nd_to_rdf = {}
     for s, p, o in graph.triples((None, OBO[HAS_PARENT_PREDICATE], None)):
+        print type(s), type(p), type(o)
         print s, p, o
 #        o_res = rdflib.Resource(graph, o)
         parent = nd_dict.get(o)
         
         if parent is None:
+            #print 'Parent o.value = ', o.value(rdflib.RDF.nodeID)
+            
             raw_o = o
             o = rdflib.resource.Resource(graph, o)
             print 'Parent nodeID = ', graph.value(raw_o, rdflib.RDF.nodeID)
@@ -46,6 +50,7 @@ def rdf2dendropyTree(filepath):
             print 'adding parent', id(parent), 'from', raw_o
             
             nd_dict[raw_o] = parent
+            dendro_nd_to_rdf[parent] = raw_o
             parentless.add(parent)
         child = nd_dict.get(s)
         if child is None:
@@ -62,10 +67,13 @@ def rdf2dendropyTree(filepath):
                 child = Node()
             print 'adding child', id(child), ' from', raw_s
             nd_dict[raw_s] = child
-            parentless.add(child)
+            dendro_nd_to_rdf[child] = raw_s
         else:
-            print 'Removing', id(child)
-            parentless.remove(child)
+            if parent in parentless:
+                print 'Removing', id(parent)
+                parentless.remove(parent)
+        parent.add_child(child)
+            
         print 'len(parentless) =', len(parentless)
         if _DEBUGGING:
             out.write('%s %s %s\n' % ( str(s), p, o))
@@ -81,7 +89,7 @@ def rdf2dendropyTree(filepath):
                 if i.label:
                     message += "\n  " + i.label
                 else:
-                    message += "\n  <unlabeled>"
+                    message += "\n  <unlabeled>" + str(id(i))
             raise ValueError(message)
         else:
             sys.exit('no parentless')
