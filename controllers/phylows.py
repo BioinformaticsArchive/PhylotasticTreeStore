@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 ### required - do no delete
+import requests
 
 OBO_PREFIX = u'http://purl.obolibrary.org/obo/'
 CDAO_PREFIX = u'http://purl.obolibrary.org/obo/cdao.owl#'
@@ -7,6 +8,7 @@ TNRS_PREFIX = u'http://tnrs.evoio.org/terms/'
 HAS_PARENT_PREDICATE = u'CDAO_0000179'
 HAS_ROOT_PREDICATE = u'CDAO_0000148'
 REPRESENTS_TU_PREDICATE = u'CDAO_0000187'
+SPARQL_SERVER_GET_URL = 'http://phylotastic.nescent.org/sparql'
 
 def rdf2dendropyTree(file_obj=None, data=None):
     '''
@@ -85,9 +87,7 @@ def _get_tree_rdf(tree_id):
 <rdf:Description rdf:about="http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#Node_12"><n0pred:has_Parent xmlns:n0pred="http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#" rdf:resource="http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#Node_14"/></rdf:Description>
 </rdf:RDF>
 """
-    import requests
-    SPARQL_SERVER_GET_URL = 'http://phylotastic.nescent.org/sparql'
-
+    
     cleaned_id = tree_id # TEMP we need to protect against SPARQL injection attact?
     query = u'prefix obo: <' + OBO_PREFIX + u'''>
 prefix cdao: <''' + CDAO_PREFIX + u'''>
@@ -134,11 +134,17 @@ select distinct ?tree
                'format' : 'application/sparql-results+xml',
     }
     o = open('req2', 'w')
-    o.write(str(payload))
+    o.write('\n'.join([(k + ' : ' + v) for k, v in payload.iteritems()]))
     o.close()
-    resp = requests.get(SPARQL_SERVER_GET_URL, params=payload)
-    resp.raise_for_status()
-    return resp.content
+    try:
+        resp = requests.get(SPARQL_SERVER_GET_URL, params=payload)
+        resp.raise_for_status()
+    except Exception, x:
+        o = open('req2', 'a')
+        o.write('\nError:' + str(x))
+        o.close()
+        raise
+    return [resp.content]
 
 
 # query URIs of the form phylows/tree/<identifier>
@@ -174,15 +180,16 @@ def find():
     # post to  phylows/find/tree/
     # returns list of URIs
     if "tree" in request.args:
-        x = request.vars.get('taxa_uris')
-        if x is None:
+        taxa_uris = request.vars.get('taxa_uris')
+        if taxa_uris is None:
             raise HTTP(400, 'no URI specified')
         # magic involving sparql
         # takes list of URIs and queries treestore for trees that contain those URIs
         tree_id_list = _get_tree_list(taxa_uris)
-        treedict = {"http://example.com/tree10" : { "label" : "something", "author": ""}, 
-  "http://example.com/tree34": { "label" : "something", "author": ""} }
-        return response.json(treedict)
+        ret = {}
+        for el in tree_id_list:
+            ret[el] = { "label" : "something", "author": ""}
+        return response.json(ret)
     else:
         raise HTTP(400, 'query not yet implemented')
 
