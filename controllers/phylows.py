@@ -22,7 +22,7 @@ def rdf2dendropyTree(file_obj=None, data=None):
     '''
     
     from rdflib.graph import Graph
-    from dendropy import Node, Tree, Edge
+    from dendropy import Node, Tree
     graph = Graph()
     if file_obj:
         graph.parse(file=file_obj)
@@ -30,6 +30,7 @@ def rdf2dendropyTree(file_obj=None, data=None):
         graph.parse(data=data)
     nd_dict = {}
     has_parent_predicate = OBO_PREFIX + HAS_PARENT_PREDICATE
+    o = open('parse_rdf.txt', 'w')
     parentless = set()
     for subject_o, predicate, obj_o in graph:
         if unicode(predicate) == has_parent_predicate:
@@ -49,7 +50,9 @@ def rdf2dendropyTree(file_obj=None, data=None):
             else:
                 parentless.remove(child)
             parent.add_child(child)
-
+            
+        o.write('%s %s %s\n' % ( str(subject_o), predicate, obj_o))
+    o.close()
     if len(parentless) != 1:
         message = "Expecting to find exactly Node (an object of a has_Parent triple) in the graph without a parent. Found %d" % len(parentless)
         CUTOFF_FOR_LISTING_PARENTLESS_NODES = len(parentless) # we might want to put in a magic number here to suppress really long output
@@ -72,19 +75,19 @@ def _get_tree_rdf(tree_id):
     if SKIP_QUERY:
         return """<?xml version="1.0" encoding="utf-8" ?>
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#">
-<rdf:Description rdf:about="http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#Node_3"><n0pred:has_Parent xmlns:n0pred="http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#" rdf:resource="http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#Node_14"/></rdf:Description>
-<rdf:Description rdf:about="http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#Node_9"><n0pred:has_Parent xmlns:n0pred="http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#" rdf:resource="http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#Node_11"/></rdf:Description>
-<rdf:Description rdf:about="http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#Node_5"><n0pred:has_Parent xmlns:n0pred="http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#" rdf:resource="http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#Node_6"/></rdf:Description>
-<rdf:Description rdf:about="http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#Node_11"><n0pred:has_Parent xmlns:n0pred="http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#" rdf:resource="http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#Node_12"/></rdf:Description>
-<rdf:Description rdf:about="http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#Node_10"><n0pred:has_Parent xmlns:n0pred="http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#" rdf:resource="http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#Node_11"/></rdf:Description>
-<rdf:Description rdf:about="http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#Node_1"><n0pred:has_Parent xmlns:n0pred="http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#" rdf:resource="http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#Node_3"/></rdf:Description>
-<rdf:Description rdf:about="http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#Node_7"><n0pred:has_Parent xmlns:n0pred="http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#" rdf:resource="http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#Node_9"/></rdf:Description>
-<rdf:Description rdf:about="http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#Node_4"><n0pred:has_Parent xmlns:n0pred="http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#" rdf:resource="http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#Node_6"/></rdf:Description>
-<rdf:Description rdf:about="http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#Node_6"><n0pred:has_Parent xmlns:n0pred="http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#" rdf:resource="http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#Node_12"/></rdf:Description>
-<rdf:Description rdf:about="http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#Node_8"><n0pred:has_Parent xmlns:n0pred="http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#" rdf:resource="http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#Node_9"/></rdf:Description>
-<rdf:Description rdf:about="http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#Node_2"><n0pred:has_Parent xmlns:n0pred="http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#" rdf:resource="http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#Node_3"/></rdf:Description>
-<rdf:Description rdf:about="http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#Node_13"><n0pred:has_Parent xmlns:n0pred="http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#" rdf:resource="http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#Node_14"/></rdf:Description>
-<rdf:Description rdf:about="http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#Node_12"><n0pred:has_Parent xmlns:n0pred="http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#" rdf:resource="http://www.evolutionaryontology.org/cdao/1.0/cdao.owl#Node_14"/></rdf:Description>
+<rdf:Description rdf:nodeID="b10830"><n0pred:CDAO_0000179 xmlns:n0pred="http://purl.obolibrary.org/obo/" rdf:nodeID="b10829"/></rdf:Description>
+<rdf:Description rdf:nodeID="b10832"><n0pred:CDAO_0000179 xmlns:n0pred="http://purl.obolibrary.org/obo/" rdf:nodeID="b10830"/></rdf:Description>
+<rdf:Description rdf:nodeID="b10818"><n0pred:CDAO_0000179 xmlns:n0pred="http://purl.obolibrary.org/obo/" rdf:nodeID="b10817"/></rdf:Description>
+<rdf:Description rdf:nodeID="b10834"><n0pred:CDAO_0000179 xmlns:n0pred="http://purl.obolibrary.org/obo/" rdf:nodeID="b10830"/></rdf:Description>
+<rdf:Description rdf:nodeID="b10826"><n0pred:CDAO_0000179 xmlns:n0pred="http://purl.obolibrary.org/obo/" rdf:nodeID="b10824"/></rdf:Description>
+<rdf:Description rdf:nodeID="b10824"><n0pred:CDAO_0000179 xmlns:n0pred="http://purl.obolibrary.org/obo/" rdf:nodeID="b10823"/></rdf:Description>
+<rdf:Description rdf:nodeID="b10822"><n0pred:CDAO_0000179 xmlns:n0pred="http://purl.obolibrary.org/obo/" rdf:nodeID="b10818"/></rdf:Description>
+<rdf:Description rdf:nodeID="b10838"><n0pred:CDAO_0000179 xmlns:n0pred="http://purl.obolibrary.org/obo/" rdf:nodeID="b10817"/></rdf:Description>
+<rdf:Description rdf:nodeID="b10828"><n0pred:CDAO_0000179 xmlns:n0pred="http://purl.obolibrary.org/obo/" rdf:nodeID="b10824"/></rdf:Description>
+<rdf:Description rdf:nodeID="b10836"><n0pred:CDAO_0000179 xmlns:n0pred="http://purl.obolibrary.org/obo/" rdf:nodeID="b10829"/></rdf:Description>
+<rdf:Description rdf:nodeID="b10823"><n0pred:CDAO_0000179 xmlns:n0pred="http://purl.obolibrary.org/obo/" rdf:nodeID="b10817"/></rdf:Description>
+<rdf:Description rdf:nodeID="b10820"><n0pred:CDAO_0000179 xmlns:n0pred="http://purl.obolibrary.org/obo/" rdf:nodeID="b10818"/></rdf:Description>
+<rdf:Description rdf:nodeID="b10829"><n0pred:CDAO_0000179 xmlns:n0pred="http://purl.obolibrary.org/obo/" rdf:nodeID="b10823"/></rdf:Description>
 </rdf:RDF>
 """
     
@@ -94,13 +97,24 @@ prefix cdao: <''' + CDAO_PREFIX + u'''>
 construct 
 {
 ?node obo:CDAO_0000179 ?parent_node . 
+?node obo:CDAO_0000187 ?otu .
+?otu rdfs:label ?otu_label .
 }
  where 
 {
 ''' + cleaned_id + ''' obo:CDAO_0000148 ?root .
 ?node obo:CDAO_0000179 ?parent_node . 
 ?node obo:CDAO_0000179 ?root option(transitive) . 
-}'''
+OPTIONAL { 
+    ?node obo:CDAO_0000187 ?otu . 
+    ?otu rdfs:label ?otu_label .
+}
+OPTIONAL { 
+    ?root obo:CDAO_0000187 ?otu . 
+    ?otu rdfs:label ?otu_label .
+}
+}
+'''
 
     payload = {'query' : query,
                'default-graph-uri' : '',
@@ -157,12 +171,12 @@ def tree():
         tree_id = request.vars.get('uri')
         if not tree_id:
             raise HTTP(400, 'Tree ID required')
+        tree_id = '<' + tree_id + '>'
     else:
         # If we we get an id through phyloWS, we make the uri by adding the obo: prefix
         tree_id = 'cdao:' + request.args[0]
     try:
         tree_rdf = _get_tree_rdf(tree_id)
-        
         tree_obj = rdf2dendropyTree(data=tree_rdf)
     except:
         raise
