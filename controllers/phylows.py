@@ -9,7 +9,8 @@ HAS_PARENT_PREDICATE = u'CDAO_0000179'
 HAS_ROOT_PREDICATE = u'CDAO_0000148'
 REPRESENTS_TU_PREDICATE = u'CDAO_0000187'
 SPARQL_SERVER_GET_URL = 'http://phylotastic.nescent.org/sparql'
-
+import os
+_DEBUGGING = os.environ.get('PHYLOTASTIC_TREE_STORE_DEBUGGING') == '1'
 def rdf2dendropyTree(file_obj=None, data=None):
     '''
     Parses the content (a `file_obj` file object or `data` as a) into a dendropyTree.
@@ -30,7 +31,8 @@ def rdf2dendropyTree(file_obj=None, data=None):
         graph.parse(data=data)
     nd_dict = {}
     has_parent_predicate = OBO_PREFIX + HAS_PARENT_PREDICATE
-    o = open('parse_rdf.txt', 'w')
+    if _DEBUGGING:
+        o = open('parse_rdf.txt', 'w')
     parentless = set()
     for subject_o, predicate, obj_o in graph:
         if unicode(predicate) == has_parent_predicate:
@@ -51,8 +53,10 @@ def rdf2dendropyTree(file_obj=None, data=None):
                 parentless.remove(child)
             parent.add_child(child)
             
-        o.write('%s %s %s\n' % ( str(subject_o), predicate, obj_o))
-    o.close()
+        if _DEBUGGING:
+            o.write('%s %s %s\n' % ( str(subject_o), predicate, obj_o))
+    if _DEBUGGING:
+        o.close()
     if len(parentless) != 1:
         message = "Expecting to find exactly Node (an object of a has_Parent triple) in the graph without a parent. Found %d" % len(parentless)
         CUTOFF_FOR_LISTING_PARENTLESS_NODES = len(parentless) # we might want to put in a magic number here to suppress really long output
@@ -121,9 +125,10 @@ OPTIONAL {
                'named-graph-uri' : '',
                'format' : 'application/sparql-results+xml',
     }
-    o = open('req', 'w')
-    o.write('\n'.join([(k + ' : ' + v) for k, v in payload.iteritems()]))
-    o.close()
+    if _DEBUGGING:
+        o = open('req', 'w')
+        o.write('\n'.join([(k + ' : ' + v) for k, v in payload.iteritems()]))
+        o.close()
     resp = requests.get(SPARQL_SERVER_GET_URL, params=payload)
     resp.raise_for_status()
     return resp.content
@@ -147,16 +152,18 @@ select distinct ?tree
                'named-graph-uri' : '',
                'format' : 'application/sparql-results+xml',
     }
-    o = open('req2', 'w')
-    o.write('\n'.join([(k + ' : ' + v) for k, v in payload.iteritems()]))
-    o.close()
+    if _DEBUGGING:
+        o = open('req2', 'w')
+        o.write('\n'.join([(k + ' : ' + v) for k, v in payload.iteritems()]))
+        o.close()
     try:
         resp = requests.get(SPARQL_SERVER_GET_URL, params=payload)
         resp.raise_for_status()
     except Exception, x:
-        o = open('req2', 'a')
-        o.write('\nError:' + str(x))
-        o.close()
+        if _DEBUGGING:
+            o = open('req2', 'a')
+            o.write('\nError:' + str(x))
+            o.close()
         raise
     return [resp.content]
 
