@@ -12,7 +12,6 @@ import rdflib
 
 
 def rdf2dendropyTree(file_obj=None, data=None):
-    from rdflib.graph import Graph
     from dendropy import Node, Tree, Edge, TaxonSet, Taxon
     graph = rdflib.Graph()
     if file_obj:
