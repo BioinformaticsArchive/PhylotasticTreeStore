@@ -11,17 +11,20 @@ _DEBUGGING = True
 import rdflib
 
 
-def rdf2dendropyTree(filepath):
+def rdf2dendropyTree(file_obj=None, data=None):
     from rdflib.graph import Graph
     from dendropy import Node, Tree, Edge, TaxonSet, Taxon
-    graph = Graph()
-    graph.parse(filepath)
+    graph = rdflib.Graph()
+    if file_obj:
+        graph.parse(file=file_obj)
+    else:
+        graph.parse(data=data, format='xml')
     nd_dict = {}
     has_parent_predicate = OBO_PREFIX + HAS_PARENT_PREDICATE
     if _DEBUGGING:
         out = open('parse_rdf.txt', 'w')
     taxon_set = TaxonSet()
-    OBO = Namespace(u"http://purl.obolibrary.org/obo/")
+    OBO = rdflib.Namespace(u"http://purl.obolibrary.org/obo/")
     parentless = set()
     for s, p, o in graph.triples((None, OBO[HAS_PARENT_PREDICATE], None)):
         parent = nd_dict.get(id(o))
@@ -86,6 +89,6 @@ def rdf2dendropyTree(filepath):
 
 if __name__ == '__main__':
     import sys
-    t = rdf2dendropyTree(sys.argv[1])
+    t = rdf2dendropyTree(data=open(sys.argv[1], 'rU').read())
     print t.write_to_stream(sys.stdout, schema="nexml")
             
