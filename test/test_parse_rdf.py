@@ -8,9 +8,6 @@ REPRESENTS_TU_PREDICATE = u'CDAO_0000187'
 _DEBUGGING = True
 
 
-
-from rdflib import Literal, BNode, Namespace
-from rdflib import RDF
 import rdflib
 
 
