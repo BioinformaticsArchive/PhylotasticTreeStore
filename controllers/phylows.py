@@ -246,6 +246,8 @@ def find():
             if taxa_uris is None:
                 taxa_uris = taxa_json.get('taxa_uris')
         except:
+            if result:
+                raise HTTP(400, 'Invalid JSON received')
             taxa_uris = None
         if taxa_uris is None:
             taxa_uris = request.vars.get('taxa_uris')
