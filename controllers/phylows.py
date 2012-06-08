@@ -221,7 +221,8 @@ def tree():
     from cStringIO import StringIO
     b = StringIO()
     tree_obj.write_to_stream(b, schema="nexml")
-    return T(b.getvalue())
+    response.headers['Content-Type']='application/rss+xml'
+    return b.getvalue()
 
 # query URIs of the form phylows/find/<query>
 def find():
