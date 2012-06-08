@@ -185,7 +185,7 @@ select distinct ?tree
  where 
 {
 ?tree obo:CDAO_0000148 ?root .
-
+FILTER(isURI(?tree))
 }
 '''
 
