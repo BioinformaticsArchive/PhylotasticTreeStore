@@ -34,6 +34,11 @@ Enter an admin's password for web2py and then visit:
     http://127.0.0.1:8000/PhylotasticTreeStore/phylows
 in your browser.
     
+    
+You'll need version
+0.13.0 or greater of requests and
+3.2.1 or greater of rdflib
+
 Notes
 -----
 To see the RDF representation of a tree enter the following query at
