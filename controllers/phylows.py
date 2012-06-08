@@ -202,15 +202,22 @@ def tree():
     if len(request.args) > 1:
         raise HTTP(400, 'Only one tree ID can be supplied')
     if len(request.args) < 1:
-        tree_id = request.vars.get('uri')
+        tree_id = request.vars.get('tree_uri')
+        if tree_id is None:
+            tree_id = request.vars.get('uri')
         if not tree_id:
             raise HTTP(400, 'Tree ID required')
         tree_id = '<' + tree_id + '>'
     else:
         # If we we get an id through phyloWS, we make the uri by adding the obo: prefix
-        tree_id = 'cdao:' + request.args[0]
+        tree_id = '<' + request.args[0] + '>'
+    
+    format = request.vars.get('format', 'nexml')
     try:
         tree_rdf = _get_tree_rdf(tree_id)
+        if format.lower() == 'rdfxml':
+            response.headers['Content-Type']='application/xml'
+            return tree_rdf
         tree_obj = rdf2dendropyTree(data=tree_rdf)
     except:
         raise
