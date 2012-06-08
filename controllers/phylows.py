@@ -241,6 +241,8 @@ def find():
         taxa_uris = request.vars.get('taxa_uris')
         if taxa_uris is None:
             raise HTTP(400, 'no URI specified')
+        if isinstance(taxa_uris, (str, unicode)):
+            taxa_uris = [taxa_uris]
         # magic involving sparql
         # takes list of URIs and queries treestore for trees that contain those URIs
         tree_id_list = _get_tree_list(taxa_uris)
