@@ -11,7 +11,9 @@ else:
     domain_name = 'http://127.0.0.1:8000'
 data = json.dumps(payload)
 print data
-resp = requests.post(domain_name + 'PhylotasticTreeStore/phylows/find/tree', data=data)
+u = domain_name + '/PhylotasticTreeStore/phylows/find/tree'
+print u
+resp = requests.post(u, data=data)
 print resp.url
 problem =  resp.raise_for_status()
 if problem is None:

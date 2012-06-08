@@ -7,8 +7,9 @@ if os.environ.get('DEBUG_WITH_PHYLOTASTIC_SERVER'):
     domain_name = 'http://phylotastic.nescent.org'
 else:
     domain_name = 'http://127.0.0.1:8000'
-
-resp = requests.post(domain_name + '/PhylotasticTreeStore/phylows/find/tree',
+u = domain_name + '/PhylotasticTreeStore/phylows/find/tree'
+print u
+resp = requests.post(u,
                      params=payload)
 print resp.url
 problem =  resp.raise_for_status()
