@@ -240,7 +240,10 @@ def find():
     # returns list of URIs
     if "tree" in request.args:
         result = request.body.read()
-        taxa_uris = json.loads(result).get('taxa_uris')
+        taxa_json = json.loads(result)
+        taxa_uris = taxa_json.get(u'taxa_uris')
+        if taxa_uris is None:
+            taxa_uris = taxa_json.get('taxa_uris')
         if taxa_uris is None:
             taxa_uris = request.vars.get('taxa_uris')
         if taxa_uris is None:
