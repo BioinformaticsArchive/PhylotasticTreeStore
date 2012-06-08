@@ -287,11 +287,4 @@ def index():
     tree_id_list = _get_tree_list_from_query(query)
     response.view = 'treeindex.html'
     return {'tree_list' : tree_id_list}
-    name_link_list = []
-    for k in tree_id_list:
-        u = URL(tree, args=[k])
-        name_link_list.append((u,k))
-    return response.json(name_link_list)
-    if request.vars.tree_id:
-        redirect(URL(c='phylows', f='tree', args=[request.vars.tree_id]))
-    return dict()
+
