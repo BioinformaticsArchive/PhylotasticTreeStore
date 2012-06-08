@@ -1,0 +1,4 @@
+{{extend 'layout.html'}} 
+{{for r in tree_list:}}
+<p>{{=A(r, _href=URL('tree', vars={'tree_uri': r},host=True))}}</p>
+{{pass}}

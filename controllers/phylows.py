@@ -162,7 +162,7 @@ OPTIONAL {
     return resp.content
 
 
-def _get_tree_list(taxa_uri_list):
+def _get_tree_list_query(taxa_uri_list):
     query = '''prefix obo: <http://purl.obolibrary.org/obo/>
 prefix tnrs: <http://tnrs.evoio.org/terms/>
 
@@ -175,6 +175,22 @@ select distinct ?tree
 ?otu tnrs:match ?match .
 %s
 }''' % '\n UNION '.join(['{?match tnrs:reference <' + i + '> . }' for i in taxa_uri_list])
+    return query
+
+def _get_list_all_trees_query():
+    return '''prefix obo: <http://purl.obolibrary.org/obo/>
+prefix tnrs: <http://tnrs.evoio.org/terms/>
+
+select distinct ?tree 
+ where 
+{
+?tree obo:CDAO_0000148 ?root .
+
+}
+'''
+
+def _get_tree_list_from_query(query):
+
     payload = {'query' : query,
                'default-graph-uri' : '',
                'named-graph-uri' : '',
@@ -257,7 +273,8 @@ def find():
             taxa_uris = [taxa_uris]
         # magic involving sparql
         # takes list of URIs and queries treestore for trees that contain those URIs
-        tree_id_list = _get_tree_list(taxa_uris)
+        query = _get_tree_list_query(taxa_uris)
+        tree_id_list = _get_tree_list_from_query(query)
         ret = {}
         for el in tree_id_list:
             ret[el] = { "label" : "", "author": ""}
@@ -266,6 +283,15 @@ def find():
         raise HTTP(400, 'query not yet implemented')
 
 def index():
+    query = _get_list_all_trees_query()
+    tree_id_list = _get_tree_list_from_query(query)
+    response.view = 'treeindex.html'
+    return {'tree_list' : tree_id_list}
+    name_link_list = []
+    for k in tree_id_list:
+        u = URL(tree, args=[k])
+        name_link_list.append((u,k))
+    return response.json(name_link_list)
     if request.vars.tree_id:
         redirect(URL(c='phylows', f='tree', args=[request.vars.tree_id]))
     return dict()
