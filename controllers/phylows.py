@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 ### required - do no delete
 import requests
+import json
 
 OBO_PREFIX = u'http://purl.obolibrary.org/obo/'
 CDAO_PREFIX = u'http://purl.obolibrary.org/obo/cdao.owl#'
@@ -238,7 +239,10 @@ def find():
     # post to  phylows/find/tree/
     # returns list of URIs
     if "tree" in request.args:
-        taxa_uris = request.vars.get('taxa_uris')
+        result = request.body.read()
+        taxa_uris = json.loads(result).get('taxa_uris')
+        if taxa_uris is None:
+            taxa_uris = request.vars.get('taxa_uris')
         if taxa_uris is None:
             raise HTTP(400, 'no URI specified')
         if isinstance(taxa_uris, (str, unicode)):
