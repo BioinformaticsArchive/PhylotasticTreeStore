@@ -177,7 +177,7 @@ select distinct ?tree
     payload = {'query' : query,
                'default-graph-uri' : '',
                'named-graph-uri' : '',
-               'format' : 'application/sparql-results+xml',
+               'format' : 'application/sparql-results+json',
     }
     if _DEBUGGING:
         o = open('req2', 'w')
@@ -186,13 +186,15 @@ select distinct ?tree
     try:
         resp = requests.get(SPARQL_SERVER_GET_URL, params=payload)
         resp.raise_for_status()
+        results = resp.json
+        trees = [binding["tree"]["value"] for binding in results['results']['bindings']]
     except Exception, x:
         if _DEBUGGING:
             o = open('req2', 'a')
             o.write('\nError:' + str(x))
             o.close()
         raise
-    return [resp.content]
+    return trees
 
 
 # query URIs of the form phylows/tree/<identifier>
@@ -237,7 +239,7 @@ def find():
         tree_id_list = _get_tree_list(taxa_uris)
         ret = {}
         for el in tree_id_list:
-            ret[el] = { "label" : "something", "author": ""}
+            ret[el] = { "label" : "", "author": ""}
         return response.json(ret)
     else:
         raise HTTP(400, 'query not yet implemented')
